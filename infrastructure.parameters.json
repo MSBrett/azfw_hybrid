@@ -1,0 +1,138 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "_artifactsLocation": {
+            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/active-directory-new-domain/"
+        },
+        "adminPassword": {
+            "value": ""
+        },
+        "adminUserName": {
+            "value": "azureadmin"
+        },
+        "azureFirewall": {
+            "value": {
+                "name": "AzureFirewall",
+                "publicIPAddressName": "pip-firewall",
+                "subnetName": "AzureFirewallSubnet",
+                "subnetPrefix": "10.128.0.0/26",
+                "routeName": "r-nexthop-to-fw",
+                "returnRouteName": "r-return-to-fw"
+            }
+        },
+        "bastionHost": {
+            "value": {
+                "name": "AzureBastionHost",
+                "subnetName": "AzureBastionSubnet",
+                "subnetPrefix": "10.128.2.0/29"
+            }
+        },
+        "deployDomain": {
+            "value": false
+        },
+        "deployVpnGateway": {
+            "value": false
+        },
+        "directoryNetwork": {
+            "value": {
+                "name": "vnet-directory",
+                "addressPrefix": "10.129.0.0/16",
+                "subnetName": "snet-directory",
+                "subnetPrefix": "10.129.0.0/24",
+                "subnetNsgName": "nsg-directory",
+                "dnsServers": [
+                    "10.129.0.4",
+                    "10.128.0.4",
+                    "168.63.129.16"
+                ]
+            }
+        },
+        "domainJoinOptions": {
+            "value": 3
+        },
+        "domainName": {
+            "value": "wvd.acme.com"
+        },
+        "hubNetwork": {
+            "value": {
+                "name": "vnet-hub",
+                "addressPrefix": "10.128.0.0/16",
+                "dnsServers": [
+                    "168.63.129.16"
+                ]
+            }
+        },
+        "location": {
+            "value": "westus" 
+        },
+        "onpremBastionHost": {
+            "value": {
+                "name": "OnpremBastionHost",
+                "subnetName": "AzureBastionSubnet",
+                "subnetPrefix": "10.131.2.0/29"
+            }
+        },
+        "onpremGateway": {
+            "value": {
+                "name": "onprem-gateway",
+                "subnetName": "GatewaySubnet",
+                "subnetPrefix": "10.131.1.0/27",
+                "pipName": "pip-onprem-gateway",
+                "connectionName": "connect-onprem-to-hub",
+                "asn": 65102,
+                "bgpPeeringAddress": "10.131.1.30"
+            }
+        },
+        "onpremNetwork": {
+            "value": {
+                "name": "vnet-onprem",
+                "addressPrefix": "10.131.0.0/16",
+                "subnetName": "snet-onprem",
+                "subnetPrefix": "10.131.0.0/24",
+                "subnetNsgName": "nsg-onprem",
+                "dnsServers": [
+                    "10.129.0.4",
+                    "10.128.0.4",
+                    "168.63.129.16"
+                ]
+            }
+        },
+        "clientCount": {
+            "value": 0
+        },
+        "vmSize": {
+            "value": "Standard_B2s"
+        },
+        "vpnGateway": {
+            "value": {
+                "name": "vgw-gateway",
+                "subnetName": "GatewaySubnet",
+                "subnetPrefix": "10.128.1.0/27",
+                "pipName": "pip-vgw-gateway",
+                "connectionName": "connect-hub-to-onprem",
+                "asn": 65101,
+                "bgpPeeringAddress": "10.128.1.30"
+            }
+        },
+        "serverCount": {
+            "value": 0
+        },
+        "workbookDisplayName": {
+            "value": "Azure Firewall Workbook"
+        },
+        "wvdNetwork": {
+            "value": {
+                "name": "vnet-wvd",
+                "addressPrefix": "10.130.0.0/16",
+                "subnetName": "snet-wvd",
+                "subnetPrefix": "10.130.0.0/24",
+                "subnetNsgName": "nsg-wvd",
+                "dnsServers": [
+                    "10.129.0.4",
+                    "168.63.129.16"
+                ]
+            }
+        }
+    }
+}
