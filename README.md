@@ -1,5 +1,12 @@
 # Notes
-This ARM template will deploy 3 virtual networks in a hub-spoke topology with one vNet connected via vNet peering and the other connected via an IPSec VPN using BGB.  Azure Firewall is deployed to the vNet hub.
+This ARM template will deploy 4 virtual networks in a hub-spoke topology.
+- One spoke connects to the hub via vNet peering.
+- The other connects to the hub via a BGP enabled IPSec VPN.
+- Azure Firewall is deployed in the hub vNet.
+- Routing tables have been created to designate Azure Firewall as the next hop IP address.
+- Route propagation has been disabled on the vNet peering connections.
+- A domain controller is 
+
 
 ![HUB Spoke Topology](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/images/hub-spoke.png)
 
