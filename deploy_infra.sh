@@ -2,7 +2,7 @@
 prefix='wvd'
 domainName='wvd.contoso.com'
 location='westus'
-subscription='Aquarium'
+subscription='workload'
 adminUserName='azureadmin'
 deployDomain='true'
 deployVpnGateway='true'
