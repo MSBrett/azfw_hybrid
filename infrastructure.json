@@ -4,7 +4,7 @@
     "parameters": {
         "_artifactsLocation": {
             "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/650b28d405f864a8ca770d8d287899717f7920a8/application-workloads/active-directory/active-directory-new-domain"
+            "defaultValue": "https://github.com/MSBrett/azfw_hybrid/raw/master"
         },
         "adminPassword": {
             "type": "securestring",
@@ -459,7 +459,7 @@
                         "typeHandlerVersion": "2.19",
                         "autoUpgradeMinorVersion": true,
                         "settings": {
-                            "ModulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/CreateADPDC.zip'))]",
+                            "ModulesUrl": "[uri(parameters('_artifactsLocation'), concat('CreateADPDC.zip'))]",
                             "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
                             "Properties": {
                                 "DomainName": "[parameters('domainName')]",
