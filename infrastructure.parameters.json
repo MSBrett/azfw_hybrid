@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "_artifactsLocation": {
-            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/active-directory-new-domain/"
+            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/650b28d405f864a8ca770d8d287899717f7920a8/application-workloads/active-directory/active-directory-new-domain"
         },
         "adminPassword": {
             "value": ""
