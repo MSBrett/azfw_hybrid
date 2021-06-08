@@ -2,9 +2,9 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "_artifactsLocation": {
+        "moduleUri": {
             "type": "string",
-            "defaultValue": "https://github.com/MSBrett/azfw_hybrid/raw/master"
+            "defaultValue": "https://github.com/MSBrett/azfw_hybrid/raw/master/CreateADPDC.zip"
         },
         "adminPassword": {
             "type": "securestring",
@@ -459,7 +459,7 @@
                         "typeHandlerVersion": "2.19",
                         "autoUpgradeMinorVersion": true,
                         "settings": {
-                            "ModulesUrl": "[uri(parameters('_artifactsLocation'), concat('CreateADPDC.zip'))]",
+                            "ModulesUrl": "[parameters('moduleUri')]",
                             "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
                             "Properties": {
                                 "DomainName": "[parameters('domainName')]",
@@ -558,7 +558,10 @@
             "name": "[concat(variables('vmNameWindows'), copyIndex(30))]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[concat(variables('nicNameWindows'), copyIndex(30))]"
+                "[concat(variables('nicNameWindows'), copyIndex(30))]",
+                "CreateADForest",
+                "[parameters('onpremGateway').connectionName]",
+                "[parameters('vpnGateway').connectionName]"
             ],
             "properties": {
                 "hardwareProfile": {
@@ -600,7 +603,9 @@
                     "location": "[parameters('location')]",
                     "dependsOn": [
                         "[concat('Microsoft.Compute/virtualMachines/', concat(variables('vmNameWindows'), copyIndex(30)))]",
-                        "CreateADForest"
+                        "CreateADForest",
+                        "[parameters('onpremGateway').connectionName]",
+                        "[parameters('vpnGateway').connectionName]"
                     ],
                     "properties": {
                         "publisher": "Microsoft.Compute",
@@ -995,7 +1000,8 @@
             "condition": "[parameters('deployVpnGateway')]",
             "dependsOn": [ 
                 "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vpnGateway').pipName)]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vpnGateway').pipName)]",
+                "CreateADForest"
              ],
             "properties": {
                 "localNetworkAddressSpace": {
@@ -1189,7 +1195,8 @@
             "condition": "[parameters('deployVpnGateway')]",
             "dependsOn": [ 
                 "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('onpremGateway').name)]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremGateway').pipName)]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremGateway').pipName)]",
+                "CreateADForest"
             ],
             "properties": {
                 "localNetworkAddressSpace": {

@@ -1,11 +1,9 @@
 #!/bin/sh
-prefix='wvd'
+prefix='wvd6'
 domainName='wvd.contoso.com'
 location='westus'
 subscription='workload'
 adminUserName='azureadmin'
-deployDomain='true'
-deployVpnGateway='true'
 serverCount=1
 clientCount=1
 
@@ -21,4 +19,12 @@ az deployment group create \
     --resource-group $resourceGroupName \
     --template-file infrastructure.json \
     --parameters @infrastructure.parameters.json \
-    --parameters "adminPassword=$adminPassword" "adminUserName=$adminUserName" "deployDomain=$deployDomain" "serverCount=$serverCount" "clientCount=$clientCount" "deployVpnGateway=$deployVpnGateway" "domainName=$domainName" "location=$location"
+    --parameters "adminPassword=$adminPassword" "adminUserName=$adminUserName" "deployDomain=false" "serverCount=0" "clientCount=0" "deployVpnGateway=true" "domainName=$domainName" "location=$location"
+
+
+az deployment group create \
+    --resource-group $resourceGroupName \
+    --template-file infrastructure.json \
+    --parameters @infrastructure.parameters.json \
+    --parameters "adminPassword=$adminPassword" "adminUserName=$adminUserName" "deployDomain=true" "serverCount=$serverCount" "clientCount=$clientCount" "deployVpnGateway=true" "domainName=$domainName" "location=$location"
+
