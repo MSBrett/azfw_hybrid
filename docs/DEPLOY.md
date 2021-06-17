@@ -10,6 +10,13 @@
 - You will need to update the deploy_infra.sh script with the name of the azure subscription you want to deploy the environment to.
 
 - You should also update the deploy_infra.sh script with the Azure Region you want to deploy the environment to.
-
+code
 ## Deploying the environment
-
+To make the script executable run the following in your terminal of choice:
+```bash
+chmod +x ./deploy.sh
+```
+To deploy the environment run the script:
+```bash
+./deploy.sh
+```
