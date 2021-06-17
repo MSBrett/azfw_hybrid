@@ -64,9 +64,9 @@ On a Mac you can use the Remote Desktop Connection Cetner
 
 ## Add Network Rules (Layer 3) to the environment
 
-Navigate to the 'Rules (Classic)' blade on the Azure Firewall and create two new Network Rule Collections using the following information:
+Navigate to the 'Rules (Classic)' blade on the Azure Firewall, *delete the existing network rule (priority 200)*, and create three new Network Rule Collections using the following information:
 
-### Domain Controllers
+### Domain Controller  Network Rule
 
 **Properties:**
 
@@ -86,7 +86,7 @@ Action          | Allow              |
 
 ![Domain Controller Network Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/Domain_Controller_Network_Rules.png)
 
-### Azure Virtual Desktop
+### Azure Virtual Desktop Network Rule
 
 **Properties:**
 
@@ -107,7 +107,7 @@ Action          | Allow                 |
 
 ![Azure Virtual Desktop Network Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/AVD_Network_Rules.png)
 
-### General Connectivity
+### General Connectivity Network Rule
 
 Property        | Value                 |
 ----------------|-----------------------|
@@ -125,9 +125,11 @@ Action          | Allow                 |
 
 ## Add Application Rules (Layer 7) to the environment
 
-The Azure virtual machines you create for Windows Virtual Desktop must have access to several Fully Qualified Domain Names (FQDNs) to function properly.
+The Azure virtual machines you create for Windows Virtual Desktop must have access to several Fully Qualified Domain Names (FQDNs) to function properly. Navigate to the 'Rules (Classic)' blade on the Azure Firewall, *delete the existing application rule (priority 300)*, and create 3 new Application Rule Collections using the following information:
 
-**Create a new network rule collection with these properties:**
+### Azure Virtual Desktop Application Rule
+
+**Properties:**
 
 Property        | Value                 |
 ----------------|-----------------------|
@@ -143,9 +145,47 @@ Action          | Allow                 |
 
 **Target FQDNs:**
 
-| Name                      | Source Type | Source         | Target Tag                 |
-|---------------------------|-------------|----------------|----------------------------|
-| xt.blob.core.windows.net  | IP Address  |  10.130.0.0/16 | *xt.blob.core.windows.net  |
-| eh.servicebus.windows.net | IP Address  |  10.130.0.0/16 | *eh.servicebus.windows.net |
+| Name                      | Source Type | Source         | Protocol:Port |  Target Tag                |
+|---------------------------|-------------|----------------|---------------|----------------------------|
+| xt.blob.core.windows.net  | IP Address  |  10.130.0.0/16 | https:443     | *xt.blob.core.windows.net  |
+| eh.servicebus.windows.net | IP Address  |  10.130.0.0/16 | https:443     | *eh.servicebus.windows.net |
 
 ![Azure Virtual Desktop Network Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/AVD_Application_Rules.png)
+
+### Blocked Websites Application Rule
+
+**Properties:**
+
+Property        | Value                 |
+----------------|-----------------------|
+Collection Name | www_deny              |
+Priority        | 600                   |
+Action          | Deny                  |
+
+**Target FQDNs:**
+
+| Name     | Source Type | Source         | Protocol:Port                          |  Target Tag    |
+|----------|-------------|----------------|----------------------------------------|----------------|
+| google   | IP Address  |  10.128.0.0/14 | http:80,http:8080,https:443,https:8443 | *.google.com   |
+| facebook | IP Address  |  10.128.0.0/14 | http:80,http:8080,https:443,https:8443 | *.facebook.com |
+| vladimir | IP Address  |  10.128.0.0/14 | http:80,http:8080,https:443,https:8443 | *.ru           |
+
+![WWW Deny Application Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/WWW_Deny.png)
+
+### Allowed Websites Application Rule
+
+**Properties:**
+
+Property        | Value                 |
+----------------|-----------------------|
+Collection Name | www_allow             |
+Priority        | 700                   |
+Action          | Allow                 |
+
+**Target FQDNs:**
+
+| Name      | Source Type | Source         | Protocol:Port                          |  Target Tag    |
+|-----------|-------------|----------------|----------------------------------------|----------------|
+| allow_all | IP Address  |  10.128.0.0/14 | http:80,http:8080,https:443,https:8443 | *              |
+
+![WWW Allow Application Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/WWW_Allow.png)
