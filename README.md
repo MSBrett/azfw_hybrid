@@ -23,10 +23,9 @@ This script will deploy 4 virtual networks in a hub-spoke topology.
 
 # Lab
 
-- [Deployment](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/DEPLOY.md)
+- [Lab Deployment](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/DEPLOY.md)
   - [Prerequisites](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/DEPLOY.md#prerequisites)
   - [Deploy the environment](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/DEPLOY.md#deploying-the-environment)
-
 - [Firewall Setup](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AZFW_SETUP.md)
   - [Gather Information](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AZFW_SETUP.md#gather-information)
   - [NAT Rules](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AZFW_SETUP.md#nat-rules)
@@ -41,4 +40,8 @@ This script will deploy 4 virtual networks in a hub-spoke topology.
     - [Azure Virtual Desktop Application etwork Rule](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AZFW_SETUP.md#azure-virtual-desktop-application-rule)
     - [Blocked Websites Application Rule](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AZFW_SETUP.md#blocked-websites-application-rule)
     - [Allowed Websites Application Rule](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AZFW_SETUP.md#allowed-websites-application-rule)
-- [Azure Virtual Desktop Setup](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AVD_SETUP.md)
+- [Configure Authentication](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AVD_SETUP.md)
+  - [Create a user account in Azure Active Directory](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AVD_SETUP.md)
+  - [Add the UPN suffix to the domain](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AVD_SETUP.md)
+  - [Create a user account in Windows Active Directory](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AVD_SETUP.md)
+  - [Grant access to Azure Virtual Desktop](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AVD_SETUP.md)
