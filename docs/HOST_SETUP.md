@@ -23,3 +23,13 @@ To register the Azure Virtual Desktop agents, do the following on the session ho
 - Download and install the Azure Virtual Desktop Agent Bootloader.
 - Download the [Azure Virtual Desktop Agent Bootloader](https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrxrH).
 - Run the installer.
+
+## Confirm the VM is registered with Azure Virtual Desktop
+
+- Click the "Total Machines" button on overview blade for the hostpool
+
+![Wait for VM](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/Confirm_VM_1.png)
+
+- Wait for the VM to register and show as healthy
+
+![Confirm VM Health](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/Confirm_VM_2.png)
