@@ -1,4 +1,4 @@
-# Configure Azure Virtual Desktop
+# Add Session Hosts to Azure Virtual Desktop
 
 ## Obtain the registration key from the Azure Portal
 
