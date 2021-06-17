@@ -1,0 +1,1122 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+        "parameters": {
+        "moduleUri": {
+            "type": "string",
+            "defaultValue": "https://github.com/MSBrett/azfw_hybrid/raw/master/CreateADPDC.zip"
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The admin password for both the Windows and Linux virtual machines."
+            }
+        },
+        "adminUserName": {
+            "type": "string",
+            "defaultValue": "azureadmin",
+            "metadata": {
+                "description": "The admin user name for both the Windows and Linux virtual machines."
+            }
+        },
+        "azureFirewall": {
+            "type": "object",
+            "defaultValue": {
+                "name": "AzureFirewall",
+                "publicIPAddressName": "pip-firewall",
+                "subnetName": "AzureFirewallSubnet",
+                "subnetPrefix": "10.128.0.0/26",
+                "routeName": "r-nexthop-to-fw",
+                "returnRouteName": "r-return-to-fw"
+            }
+        },
+        "bastionHost": {
+            "type": "object",
+            "defaultValue": {
+                "name": "AzureBastionHost",
+                "subnetName": "AzureBastionSubnet",
+                "subnetPrefix": "10.128.2.0/29"
+            }
+        },
+        "deployDomain": {
+            "type": "bool",
+            "defaultValue": false
+        },
+        "joinDomain": {
+            "type": "bool",
+            "defaultValue": false
+        },
+        "connectVpn": {
+            "type": "bool",
+            "defaultValue": false
+        },
+        "directoryNetwork": {
+            "type": "object",
+            "defaultValue": {
+                "name": "vnet-directory",
+                "addressPrefix": "10.129.0.0/16",
+                "subnetName": "snet-directory",
+                "subnetPrefix": "10.129.0.0/24",
+                "subnetNsgName": "nsg-directory",
+                "dnsServers": [
+                    "10.129.0.4",
+                    "10.128.0.4",
+                    "168.63.129.16"
+                ]
+            }
+        },
+        "domainJoinOptions": {
+            "type": "int",
+            "defaultValue": 3,
+            "metadata": {
+                "description": "Set of bit flags that define the join options. Default value of 3 is a combination of NETSETUP_JOIN_DOMAIN (0x00000001) & NETSETUP_ACCT_CREATE (0x00000002) i.e. will join the domain and create the account on the domain. For more information see https://msdn.microsoft.com/en-us/library/aa392154(v=vs.85).aspx"
+            }
+        },
+        "domainName": {
+            "type": "string",
+            "defaultValue": "wvd.acme.com",
+            "metadata": {
+                "description": "Name of the AD domain to create"
+            }
+        },
+        "hubNetwork": {
+            "type": "object",
+            "defaultValue": {
+                "name": "vnet-hub",
+                "addressPrefix": "10.128.0.0/16",
+                "dnsServers": [
+                    "168.63.129.16"
+                ]
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]"
+        },
+        "onpremBastionHost": {
+            "type": "object",
+            "defaultValue": {
+                "name": "OnpremBastionHost",
+                "subnetName": "AzureBastionSubnet",
+                "subnetPrefix": "10.131.2.0/29"
+            }
+        },
+        "onpremGateway": {
+            "type": "object",
+            "defaultValue": {
+                "name": "onprem-gateway",
+                "subnetName": "GatewaySubnet",
+                "subnetPrefix": "10.131.1.0/27",
+                "pipName": "pip-onprem-gateway",
+                "connectionName": "connect-onprem-to-hub",
+                "asn": 65102,
+                "bgpPeeringAddress": "10.131.1.30"
+            }
+        },
+        "onpremNetwork": {
+            "type": "object",
+            "defaultValue": {
+                "name": "vnet-onprem",
+                "addressPrefix": "10.131.0.0/16",
+                "subnetName": "snet-onprem",
+                "subnetPrefix": "10.131.0.0/24",
+                "subnetNsgName": "nsg-onprem",
+                "dnsServers": [
+                    "10.129.0.4"
+                ]
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "defaultValue": "Standard_B2s"
+        },
+        "vpnGateway": {
+            "type": "object",
+            "defaultValue": {
+                "name": "vgw-gateway",
+                "subnetName": "GatewaySubnet",
+                "subnetPrefix": "10.128.1.0/27",
+                "pipName": "pip-vgw-gateway",
+                "connectionName": "connect-hub-to-onprem",
+                "asn": 65101,
+                "bgpPeeringAddress": "10.128.1.30"
+            }
+        },
+        "wvdNetwork": {
+            "type": "object",
+            "defaultValue": {
+                "name": "vnet-wvd",
+                "addressPrefix": "10.130.0.0/16",
+                "subnetName": "snet-wvd",
+                "subnetPrefix": "10.130.0.0/24",
+                "subnetNsgName": "nsg-wvd",
+                "dnsServers": [
+                    "10.129.0.4"
+                ]
+            }
+        }
+    },
+    "variables": {
+        "nicNameWindows": "nic-windows-",
+        "peering-name-hub-to-spoke-one": "hub-to-spoke-one",
+        "peering-name-hub-to-spoke-two": "hub-to-spoke-two",
+        "peering-name-spoke-one-to-hub": "spoke-one-to-hub",
+        "peering-name-spoke-two-to-hub": "spoke-two-to-hub",
+        "vmNameWindows": "vm-windows-",
+        "windowsOSVersion": "2016-Datacenter",
+        "wvd_offer": "office-365",
+        "wvd_publisher": "microsoftwindowsdesktop",
+        "wvd_sku": "20h2-evd-o365pp"
+    },
+    "resources": [
+        {
+            "comments": "Spoke virtual network, subnet, and diagnostic configuration",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-05-01",
+            "name": "[parameters('directoryNetwork').name]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('directoryNetwork').subnetNsgName)]",
+                "[resourceId('Microsoft.Network/routeTables', parameters('azureFirewall').routeName)]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('directoryNetwork').addressPrefix]"
+                    ]
+                },
+                "dhcpOptions": {
+                    "dnsServers": "[parameters('directoryNetwork').dnsServers]"
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('directoryNetwork').subnetName]",
+                        "properties": {
+                            "addressPrefix": "[parameters('directoryNetwork').subnetPrefix]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', parameters('azureFirewall').routeName)]"
+                            },
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('directoryNetwork').subnetNsgName)]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Hub virtual network and diagnostic configuration",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-05-01",
+            "name": "[parameters('hubNetwork').name]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('hubNetwork').addressPrefix]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('azureFirewall').subnetName]",
+                        "properties": {
+                            "addressPrefix": "[parameters('azureFirewall').subnetPrefix]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('bastionHost').subnetName]",
+                        "properties": {
+                            "addressPrefix": "[parameters('bastionHost').subnetPrefix]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('vpnGateway').subnetName]",
+                        "properties": {
+                            "addressPrefix": "[parameters('vpnGateway').subnetPrefix]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Onprem virtual network, subnet, and diagnostic configuration",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-05-01",
+            "name": "[parameters('onpremNetwork').name]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('onpremNetwork').subnetNsgName)]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('onpremNetwork').addressPrefix]"
+                    ]
+                },
+                "dhcpOptions": {
+                    "dnsServers": "[parameters('onpremNetwork').dnsServers]"
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('onpremNetwork').subnetName]",
+                        "properties": {
+                            "addressPrefix": "[parameters('onpremNetwork').subnetPrefix]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('onpremGateway').subnetName]",
+                        "properties": {
+                            "addressPrefix": "[parameters('onpremGateway').subnetPrefix]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('onpremBastionHost').subnetName]",
+                        "properties": {
+                            "addressPrefix": "[parameters('onpremBastionHost').subnetPrefix]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Spoke virtual network, subnet, and diagnostic configuration",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-05-01",
+            "name": "[parameters('wvdNetwork').name]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('wvdNetwork').subnetNsgName)]",
+                "[resourceId('Microsoft.Network/routeTables', parameters('azureFirewall').routeName)]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('wvdNetwork').addressPrefix]"
+                    ]
+                },
+                "dhcpOptions": {
+                    "dnsServers": "[parameters('wvdNetwork').dnsServers]"
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('wvdNetwork').subnetName]",
+                        "properties": {
+                            "addressPrefix": "[parameters('wvdNetwork').subnetPrefix]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('wvdNetwork').subnetNsgName)]"
+                            },
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', parameters('azureFirewall').routeName)]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Azure Firewall",
+            "type": "Microsoft.Network/azureFirewalls",
+            "apiVersion": "2020-05-01",
+            "name": "[parameters('azureFirewall').name]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubNetwork').name)]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('azureFirewall').publicIPAddressName)]"
+            ],
+            "properties": {
+                "sku": {
+                    "name": "AZFW_VNet",
+                    "tier": "Standard"
+                },
+                "threatIntelMode": "Alert",
+                "additionalProperties": {
+                    "Network.DNS.EnableProxy": "true"
+                },
+                "ipConfigurations": [
+                    {
+                        "name": "[parameters('azureFirewall').name]",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('azureFirewall').publicIPAddressName)]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubNetwork').name, parameters('azureFirewall').subnetName)]"
+                            }
+                        }
+                    }
+                ],
+                "networkRuleCollections": [
+                    {
+                        "name": "colleciton_allow_l3",
+                        "properties": {
+                            "priority": 200,
+                            "action": { "type": "Allow" },
+                            "rules": [
+                                {
+                                    "name": "rule_allow_all_internal",
+                                    "sourceAddresses": [
+                                        "[parameters('wvdNetwork').addressPrefix]",
+                                        "[parameters('directoryNetwork').addressPrefix]",
+                                        "[parameters('onpremNetwork').addressPrefix]",
+                                        "[parameters('hubNetwork').addressPrefix]"
+                                    ],
+                                    "destinationAddresses": [
+                                        "[parameters('wvdNetwork').addressPrefix]",
+                                        "[parameters('directoryNetwork').addressPrefix]",
+                                        "[parameters('onpremNetwork').addressPrefix]",
+                                        "[parameters('hubNetwork').addressPrefix]"
+                                    ],
+                                    "destinationPorts": [ "*" ],
+                                    "protocols": [ "Any" ]
+                                },
+                                {
+                                    "name": "rule_allow_rdp",
+                                    "sourceAddresses": [
+                                        "*"
+                                    ],
+                                    "destinationAddresses": [
+                                        "[parameters('wvdNetwork').addressPrefix]",
+                                        "[parameters('directoryNetwork').addressPrefix]",
+                                        "[parameters('onpremNetwork').addressPrefix]",
+                                        "[parameters('hubNetwork').addressPrefix]"
+                                    ],
+                                    "destinationPorts": [ "3389" ],
+                                    "protocols": [
+                                        "TCP",
+                                        "UDP"
+                                    ]
+                                },
+                                {
+                                    "name": "rule_allow_dns",
+                                    "sourceAddresses": [
+                                        "*"
+                                    ],
+                                    "destinationAddresses": [
+                                        "168.63.129.16",
+                                        "10.128.0.4"
+                                    ],
+                                    "destinationPorts": [ "53" ],
+                                    "protocols": [
+                                        "TCP",
+                                        "UDP"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "applicationRuleCollections": [
+                    {
+                        "name": "collection_allow_all_l7",
+                        "properties": {
+                            "priority": 300,
+                            "action": { "type": "Allow" },
+                            "rules": [
+                                {
+                                    "name": "rule_allow_all_l7",
+                                    "sourceAddresses": [
+                                        "10.128.0.0/14",
+                                        "192.168.0.0/16"
+                                    ],
+                                    "targetFqdns": [
+                                        "*"
+                                    ],
+                                    "protocols": [
+                                        {
+                                            "protocolType": "Http",
+                                            "port": 80
+                                        },
+                                        {
+                                            "protocolType": "Http",
+                                            "port": 8080
+                                        },
+                                        {
+                                            "protocolType": "Https",
+                                            "port": 443
+                                        },
+                                        {
+                                            "protocolType": "Https",
+                                            "port": 8443
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Route / force tunnel from gateway subnet to Azure firewall",
+            "type": "Microsoft.Network/routeTables",
+            "apiVersion": "2020-05-01",
+            "name": "[parameters('azureFirewall').returnRouteName]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/azureFirewalls', parameters('azureFirewall').name)]"
+            ],
+            "properties": {
+                "disableBgpRoutePropagation": false,
+                "routes": [
+                    {
+                        "name": "[parameters('wvdNetwork').name]",
+                        "properties": {
+                            "addressPrefix": "[parameters('wvdNetwork').addressPrefix]",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('azureFirewall').name), '2020-05-01').ipConfigurations[0].properties.privateIpAddress]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('directoryNetwork').name]",
+                        "properties": {
+                            "addressPrefix": "[parameters('directoryNetwork').addressPrefix]",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('azureFirewall').name), '2020-05-01').ipConfigurations[0].properties.privateIpAddress]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Route / force tunnel from spokes to Azure firewall",
+            "type": "Microsoft.Network/routeTables",
+            "apiVersion": "2020-05-01",
+            "name": "[parameters('azureFirewall').routeName]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/azureFirewalls', parameters('azureFirewall').name)]"
+            ],
+            "properties": {
+                "disableBgpRoutePropagation": true,
+                "routes": [
+                    {
+                        "name": "[parameters('azureFirewall').routeName]",
+                        "properties": {
+                            "addressPrefix": "0.0.0.0/0",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('azureFirewall').name), '2020-05-01').ipConfigurations[0].properties.privateIpAddress]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Network security group + rules for spoke network and diagnostic configuration",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('directoryNetwork').subnetNsgName]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": []
+            }
+        },
+        {
+            "comments": "Network security group + rules for spoke network and diagnostic configuration",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('onpremNetwork').subnetNsgName]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": []
+            }
+        },
+        {
+            "comments": "Network security group + rules for spoke network and diagnostic configuration",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('wvdNetwork').subnetNsgName]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": []
+            }
+        },
+        {
+            "comments": "Virtual network peering hub to spoke one",
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "apiVersion": "2020-05-01",
+            "name": "[concat(parameters('hubNetwork').name, '/', variables('peering-name-hub-to-spoke-one'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubNetwork').name)]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('directoryNetwork').name)]",
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)]"
+                ],
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": true,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('directoryNetwork').name)]"
+                }
+            }
+        },
+        {
+            "comments": "Virtual network peering hub to spoke two",
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "apiVersion": "2020-05-01",
+            "name": "[concat(parameters('hubNetwork').name, '/', variables('peering-name-hub-to-spoke-two'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubNetwork').name)]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('wvdNetwork').name)]",
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)]"
+            ],
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": true,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('wvdNetwork').name)]"
+                }
+            }
+        },
+        {
+            "comments": "Virtual network peering spoke one to hub",
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "apiVersion": "2020-05-01",
+            "name": "[concat(parameters('directoryNetwork').name, '/', variables('peering-name-spoke-one-to-hub'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubNetwork').name)]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('directoryNetwork').name)]",
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)]"
+            ],
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": true,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubNetwork').name)]"
+                }
+            }
+        },
+        {
+            "comments": "Virtual network peering spoke two to hub",
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "apiVersion": "2020-05-01",
+            "name": "[concat(parameters('wvdNetwork').name, '/', variables('peering-name-spoke-two-to-hub'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubNetwork').name)]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('wvdNetwork').name)]",
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)]"
+            ],
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": true,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubNetwork').name)]"
+                }
+            }
+        },
+        {
+            "comments": "Public IP address for Azure Firewall",
+            "apiVersion": "2019-11-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[parameters('azureFirewall').publicIPAddressName]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static"
+            }
+        },
+        {
+            "comments": "Public IP address for Onpremise Gateway",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('onpremGateway').pipName]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "comments": "Public IP address for VPN Gateway",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('vpnGateway').pipName]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "comments": "VPN Gateway and diagnostic configuration (optional)",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('onpremGateway').name]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('onpremNetwork').name)]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremGateway').pipName)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('onpremNetwork').name, parameters('onpremGateway').subnetName)]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremGateway').pipName)]"
+                            }
+                        },
+                        "name": "vnetGatewayConfig"
+                    }
+                ],
+                "sku": {
+                    "name": "VpnGw1",
+                    "tier": "VpnGw1"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": true,
+                "bgpSettings": {
+                    "asn": "[parameters('onpremGateway').asn]",
+                    "bgpPeeringAddress": "[parameters('onpremGateway').bgpPeeringAddress]"
+                }
+            }
+        },
+        {
+            "comments": "VPN Gateway and diagnostic configuration (optional)",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('vpnGateway').name]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubNetwork').name)]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vpnGateway').pipName)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubNetwork').name, parameters('vpnGateway').subnetName)]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vpnGateway').pipName)]"
+                            }
+                        },
+                        "name": "vnetGatewayConfig"
+                    }
+                ],
+                "sku": {
+                    "name": "VpnGw1",
+                    "tier": "VpnGw1"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": true,
+                "bgpSettings": {
+                    "asn": "[parameters('vpnGateway').asn]",
+                    "bgpPeeringAddress": "[parameters('vpnGateway').bgpPeeringAddress]"
+                }
+            }
+        },
+        {
+            "comments": "Subnet for VPN Gateway",
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2020-05-01",
+            "name": "[concat(parameters('hubNetwork').name, '/', parameters('vpnGateway').subnetName)]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubNetwork').name)]",
+                "[resourceId('Microsoft.Network/routeTables', parameters('azureFirewall').returnRouteName)]",
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('vpnGateway').subnetPrefix]",
+                "routeTable": {
+                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('azureFirewall').returnRouteName)]"
+                }
+            }
+        },
+        {
+            "name": "[parameters('hubNetwork').name]",
+            "type": "Microsoft.Network/localNetworkGateways",
+            "apiVersion": "2019-11-01",
+            "location": "[parameters('location')]",
+            "condition": "[parameters('connectVpn')]",
+            "dependsOn": [ 
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vpnGateway').pipName)]",
+                "CreateADForest"
+             ],
+            "properties": {
+                "localNetworkAddressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('hubNetwork').addressPrefix]",
+                        "[parameters('directoryNetwork').addressPrefix]",
+                        "[parameters('wvdNetwork').addressPrefix]"
+                    ]
+                },
+                "gatewayIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses', parameters('vpnGateway').pipName), '2020-05-01').ipAddress]",
+                "bgpSettings": {
+                    "bgpPeeringAddress": "[parameters('vpnGateway').bgpPeeringAddress]",
+                    "asn": "[parameters('vpnGateway').asn]",
+                    "peerWeight": 10
+                }
+            }
+        },
+        {
+            "name": "[parameters('onpremNetwork').name]",
+            "type": "Microsoft.Network/localNetworkGateways",
+            "apiVersion": "2019-11-01",
+            "location": "[parameters('location')]",
+            "condition": "[parameters('connectVpn')]",
+            "dependsOn": [ 
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('onpremGateway').name)]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremGateway').pipName)]",
+                "CreateADForest"
+            ],
+            "properties": {
+                "localNetworkAddressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('onpremNetwork').addressPrefix]"
+                    ]
+                },
+                "gatewayIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremGateway').pipName), '2020-05-01').ipAddress]",
+                "bgpSettings": {
+                    "bgpPeeringAddress": "[parameters('onpremGateway').bgpPeeringAddress]",
+                    "asn": "[parameters('onpremGateway').asn]",
+                    "peerWeight": 10
+                }
+            }
+        },
+        {
+            "name": "[parameters('vpnGateway').connectionName]",
+            "type": "Microsoft.Network/connections",
+            "apiVersion": "2019-11-01",
+            "location": "[parameters('location')]",
+            "condition": "[parameters('connectVpn')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)]",
+                "[resourceId('Microsoft.Network/localNetworkGateways', parameters('onpremNetwork').name)]"
+            ],
+            "properties": {
+                "virtualNetworkGateway1": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)]"
+                },
+                "localNetworkGateway2": {
+                    "id": "[resourceId('Microsoft.Network/localNetworkGateways', parameters('onpremNetwork').name)]"
+                },
+                "connectionType": "IPsec",
+                "routingWeight": 10,
+                "enableBgp": true,
+                "sharedKey": "[concat(parameters('adminPassword'),parameters('adminPassword'))]"
+            }
+        },
+        {
+            "name": "[parameters('onpremGateway').connectionName]",
+            "type": "Microsoft.Network/connections",
+            "apiVersion": "2019-11-01",
+            "location": "[parameters('location')]",
+            "condition": "[parameters('connectVpn')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('onpremGateway').name)]",
+                "[resourceId('Microsoft.Network/localNetworkGateways', parameters('hubNetwork').name)]"
+            ],
+            "properties": {
+                "virtualNetworkGateway1": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('onpremGateway').name)]"
+                },
+                "localNetworkGateway2": {
+                    "id": "[resourceId('Microsoft.Network/localNetworkGateways', parameters('hubNetwork').name)]"
+                },
+                "connectionType": "IPsec",
+                "routingWeight": 10,
+                "enableBgp": true,
+                "sharedKey": "[concat(parameters('adminPassword'),parameters('adminPassword'))]"
+            }
+        },
+        {
+            "comments": "DC NIC",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-05-01",
+            "name": "[concat(variables('nicNameWindows'), 'dc')]",
+            "location": "[parameters('location')]",
+            "condition": "[parameters('deployDomain')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('directoryNetwork').name)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('directoryNetwork').name, parameters('directoryNetwork').subnetName)]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "WVD Session Host NICs",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-05-01",
+            "name": "[concat(variables('nicNameWindows'), 'wvd')]",
+            "location": "[parameters('location')]",
+            "condition": "[parameters('deployDomain')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('wvdNetwork').name)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('wvdNetwork').name, parameters('wvdNetwork').subnetName)]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Network interface for On-Premise Windows VMs",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-05-01",
+            "name": "[concat(variables('nicNameWindows'), 'srv')]",
+            "condition": "[parameters('deployDomain')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('onpremNetwork').name)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('onpremNetwork').name, parameters('onpremNetwork').subnetName)]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+                {
+            "comments": "Directory Services VM",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[concat(variables('vmNameWindows'), 'dc')]",
+            "location": "[parameters('location')]",
+            "condition": "[parameters('deployDomain')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicNameWindows'), 'dc'))]"
+                
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat(variables('vmNameWindows'), 'dc')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "[variables('windowsOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        },
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[concat(variables('vmNameWindows'), 'dc_datadisk0')]",
+                            "lun": 0,
+                            "caching": "ReadWrite",
+                            "createOption": "Empty",
+                            "diskSizeGB": 8,
+                            "managedDisk": {
+                                "storageAccountType": "StandardSSD_LRS"
+                            }
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicNameWindows'), 'dc'))]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "type": "extensions",
+                    "apiVersion": "2019-03-01",
+                    "name": "CreateADForest",
+                    "condition": "[parameters('deployDomain')]",
+                    "location": "[parameters('location')]",
+                    "dependsOn": [
+                        "[concat(variables('vmNameWindows'), 'dc')]",
+                        "[resourceId('Microsoft.Network/azureFirewalls', parameters('azureFirewall').name)]",
+                        "[resourceId('Microsoft.Network/azureFirewalls', parameters('azureFirewall').name)]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Powershell",
+                        "type": "DSC",
+                        "typeHandlerVersion": "2.19",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "ModulesUrl": "[parameters('moduleUri')]",
+                            "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
+                            "Properties": {
+                                "DomainName": "[parameters('domainName')]",
+                                "AdminCreds": {
+                                    "UserName": "[parameters('adminUsername')]",
+                                    "Password": "PrivateSettingsRef:AdminPassword"
+                                }
+                            }
+                        },
+                        "protectedSettings": {
+                            "Items": {
+                                "AdminPassword": "[parameters('adminPassword')]"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "comments": "WVD Session Hosts",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[concat(variables('vmNameWindows'), 'wvd')]",
+            "location": "[parameters('location')]",
+            "condition": "[parameters('deployDomain')]",
+            "dependsOn": [
+                "[concat(variables('nicNameWindows'), 'wvd')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat(variables('vmNameWindows'), 'wvd')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('wvd_publisher')]",
+                        "offer": "[variables('wvd_offer')]",
+                        "sku": "[variables('wvd_sku')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        },
+                        "caching": "ReadWrite"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicNameWindows'), 'wvd'))]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2015-06-15",
+                    "type": "Microsoft.Compute/virtualMachines/extensions",
+                    "name": "[concat(variables('vmNameWindows'), 'wvd','/joindomain')]",
+                    "location": "[parameters('location')]",
+                    "condition": "[parameters('deployDomain')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines/', concat(variables('vmNameWindows'), 'wvd'))]",
+                        "[resourceId('Microsoft.Network/routeTables', parameters('azureFirewall').routeName)]",
+                        "CreateADForest"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "JsonADDomainExtension",
+                        "typeHandlerVersion": "1.3",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "Name": "[parameters('domainName')]",
+                            "User": "[concat(first(split(parameters('domainName'), '.')), '\\', parameters('adminUserName'))]",
+                            "Restart": "true",
+                            "Options": "[parameters('domainJoinOptions')]"
+                        },
+                        "protectedSettings": {
+                            "Password": "[parameters('adminPassword')]"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "comments": "Onpremise VMs",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[concat(variables('vmNameWindows'), 'srv')]",
+            "location": "[parameters('location')]",
+            "condition": "[parameters('deployDomain')]",
+            "dependsOn": [
+                "[concat(variables('nicNameWindows'), 'srv')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat(variables('vmNameWindows'), 'srv')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "[variables('windowsOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        },
+                        "caching": "ReadWrite"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicNameWindows'), 'srv'))]"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

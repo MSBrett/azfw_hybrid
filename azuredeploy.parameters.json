@@ -31,7 +31,10 @@
         "deployDomain": {
             "value": false
         },
-        "deployVpnGateway": {
+        "joinDomain": {
+            "value": false
+        },
+        "connectVpn": {
             "value": false
         },
         "directoryNetwork": {
@@ -98,9 +101,6 @@
                 ]
             }
         },
-        "clientCount": {
-            "value": 0
-        },
         "vmSize": {
             "value": "Standard_B2s"
         },
@@ -114,12 +114,6 @@
                 "asn": 65101,
                 "bgpPeeringAddress": "10.128.1.30"
             }
-        },
-        "serverCount": {
-            "value": 0
-        },
-        "workbookDisplayName": {
-            "value": "Azure Firewall Workbook"
         },
         "wvdNetwork": {
             "value": {
