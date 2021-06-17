@@ -44,8 +44,11 @@ The lab script will deploy 4 virtual networks in a hub-spoke topology.
 - [Add Session Hosts to Azure Virtual Desktop](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/HOST_SETUP.md)
   - [Obtain the registration key from the Azure Portalp](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/HOST_SETUP.md#obtain-the-registration-key-from-the-azure-portal)
   - [Register the session host VM to the Azure Virtual Desktop host pool](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/HOST_SETUP.md#register-the-session-host-vm-to-the-azure-virtual-desktop-host-pool)
+  - [Confirm the VM is registered with Azure Virtual Desktop](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/HOST_SETUP.md#confirm-the-vm-is-registered-with-azure-virtual-desktop)
 - [Configure Authentication](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md)
   - [Create a user account in Azure Active Directory](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md#create-a-user-account-in-azure-active-directory)
   - [Add the UPN suffix to the domain](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md#add-the-upn-suffix-to-the-domain)
   - [Create a user account in Windows Active Directory](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md#create-a-user-account-in-windows-active-directory)
   - [Grant access to Azure Virtual Desktop](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md#grant-access-to-azure-virtual-desktop)
+- [Azure Virtual Desktop Client Configuration](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/CLIENT_SETUP.md)
+
