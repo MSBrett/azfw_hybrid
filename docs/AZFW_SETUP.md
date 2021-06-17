@@ -50,7 +50,7 @@ Add a NAT rule for the 'onpremise' service host and click save
 
 ### Test RDP Connectivity
 
-Assuming athe Firewall's external IP address is **138.91.160.116** one could execute the following on Windows to test connectivity to each VM:
+Assuming the Firewall's external IP address is **138.91.160.116** one could execute the following on Windows to test connectivity to each VM:
 
 ```cmd
 mstsc /v 138.91.160.116:3389
@@ -107,8 +107,29 @@ Action          | Allow                 |
 
 ![Azure Virtual Desktop Network Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/AVD_Network_Rules.png)
 
-### Test the Domain Controller rules
-
-### Test the AVD rules
-
 ## Add Application Rules (Layer 7) to the environment
+
+The Azure virtual machines you create for Windows Virtual Desktop must have access to several Fully Qualified Domain Names (FQDNs) to function properly.
+
+**Create a new network rule collection with these properties:**
+
+Property        | Value                 |
+----------------|-----------------------|
+Collection Name | Azure_Virtual_Desktop |
+Priority        | 500                   |
+Action          | Allow                 |
+
+**WindowsVirtualDesktop FQDN Tag:**
+
+| Name                  | Source Type | Source         | FQDN Tag              |
+|-----------------------|-------------|----------------|-----------------------|
+| WindowsVirtualDesktop | IP Address  |  10.130.0.0/16 | WindowsVirtualDesktop |
+
+**Additional Target FQDN Tags:**
+
+| Name                      | Source Type | Source         | Target Tag                 |
+|---------------------------|-------------|----------------|----------------------------|
+| xt.blob.core.windows.net  | IP Address  |  10.130.0.0/16 | *xt.blob.core.windows.net  |
+| eh.servicebus.windows.net | IP Address  |  10.130.0.0/16 | *eh.servicebus.windows.net |
+
+![Azure Virtual Desktop Network Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/AVD_Application_Rules.png)
