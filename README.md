@@ -1,5 +1,6 @@
 
 # Azure technologies used in this lab
+
 - Azure Firewall
 - Azure Resource Manager (and DSC)
 - Log Analytics
@@ -8,9 +9,11 @@
 - vNet Peering
 
 # Lab Environment
+
 ![Image of Lab Environment](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/AZFW_AIO.png)
 
 This script will deploy 4 virtual networks in a hub-spoke topology.
+
 - An Azure Firewall and VPN Gateway are deployed in the hub network.
 - A Windows Domain is deployed in the "Directory" spoke vNet.
 - A Windows VM is deployed in the "WVD" spoke vNet
@@ -18,3 +21,10 @@ This script will deploy 4 virtual networks in a hub-spoke topology.
 - Routing tables have been created to designate Azure Firewall as the next hop IP address in Azure.
 - Route propagation has been disabled on the vNet peering connections.
 
+# Lab
+
+- [Deployment](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/DEPLOY.md)
+  - [Prerequisites](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/DEPLOY.md#prerequisites)
+  - [Deploy the environment](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/DEPLOY.md#deploying-the-environment)
+- [Firewall Setup](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AZFW_SETUP.md)
+- [Azure Virtual Desktop Setup](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AVD_SETUP.md)
