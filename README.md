@@ -41,6 +41,7 @@ The lab script will deploy 4 virtual networks in a hub-spoke topology.
     - [Blocked Websites Application Rule](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AZFW_SETUP.md#blocked-websites-application-rule)
     - [Allowed Websites Application Rule](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AZFW_SETUP.md#allowed-websites-application-rule)
 - [Configure Azure Virtual Desktop](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AVD_SETUP.md)
+- [Add Session Hosts to Azure Virtual Desktop](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/HOST_SETUP.md)
 - [Configure Authentication](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md)
   - [Create a user account in Azure Active Directory](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md#create-a-user-account-in-azure-active-directory)
   - [Add the UPN suffix to the domain](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md#add-the-upn-suffix-to-the-domain)
