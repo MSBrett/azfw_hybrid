@@ -36,5 +36,6 @@ To grant the newly added user access to Azure Virtual Desktop.
 ![Application Group](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/Application_Groups.png)
 
 - Select the Application Group, and add the user via the Assignments blade
+- Adding the user to a group and assigning access to the group is a more scalable approach.
 
 ![Assignments](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/Assign_Users.png)
