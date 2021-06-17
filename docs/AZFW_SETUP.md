@@ -18,11 +18,11 @@ You can determine the external IP of your firewall by inspecting the pip-firewal
 
 ![Firewall IP](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/Firewall_IP.png)
 
-## Add NAT rules for each VM
+## NAT Rules
 
 For the purposes of this lab we will create DNAT rules on the Azure Firewall to allow RDP access to the VMs.  In most scenarios it would be better to use Azure Bastion, but seeing as it won't be able to communicate with our 'onpremise' VM we'll use DNAT on the firewall.  To do so we're going to create a NAT Rule Collection with the following rules:
 
-### NAT rules
+### NAT Rule Details
 
 | Name | Protocol | Source Type | Source           | Destination Address  | Destination Ports | Translated Address | Translated Ports |
 |------|----------|-------------|------------------|----------------------|-------------------|--------------------|------------------|
@@ -62,7 +62,7 @@ On a Mac you can use the Remote Desktop Connection Cetner
 
 ![MAC RDP](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/RDP_Connection_Center.png)
 
-## Add Network Rules (Layer 3) to the environment
+## Network Rules
 
 Navigate to the 'Rules (Classic)' blade on the Azure Firewall, *delete the existing network rule (priority 200)*, and create three new Network Rule Collections using the following information:
 
@@ -123,7 +123,7 @@ Action          | Allow                 |
 
 ![Azure Virtual Desktop Network Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/General_Network_Rule.png)
 
-## Add Application Rules (Layer 7) to the environment
+## Application Rules
 
 The Azure virtual machines you create for Windows Virtual Desktop must have access to several Fully Qualified Domain Names (FQDNs) to function properly. Navigate to the 'Rules (Classic)' blade on the Azure Firewall, *delete the existing application rule (priority 300)*, and create 3 new Application Rule Collections using the following information:
 
