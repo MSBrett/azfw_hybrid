@@ -12,7 +12,7 @@
 
 ![Image of Lab Environment](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/AZFW_AIO.png)
 
-This script will deploy 4 virtual networks in a hub-spoke topology.
+The lab script will deploy 4 virtual networks in a hub-spoke topology.
 
 - An Azure Firewall and VPN Gateway are deployed in the hub network.
 - A Windows Domain is deployed in the "Directory" spoke vNet.

@@ -28,3 +28,13 @@ Now it's time to add a matching user to Active Directory.
 ![Set Password](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/Create_User_2.png)
 
 ## Grant access to Azure Virtual Desktop
+
+To grant the newly added user access to Azure Virtual Desktop.
+
+- Navigate to the "Applicaiton Groups" blade in Azure Virtual Desktop
+
+![Application Group](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/Application_Groups.png)
+
+- Select the Application Group, and add the user via the Assignments blade
+
+![Assignments](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/Assign_Users.png)
