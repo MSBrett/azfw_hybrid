@@ -53,5 +53,5 @@ The lab script will deploy 4 virtual networks in a hub-spoke topology.
   - [Create a user account in Windows Active Directory](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md#create-a-user-account-in-windows-active-directory)
   - [Grant access to Azure Virtual Desktop](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md#grant-access-to-azure-virtual-desktop)
 - [Azure Virtual Desktop Client Configuration](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/CLIENT_SETUP.md)
-  - [Client Configuration](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/CLIENT_SETUP.md)
-  - [Confirm Configuration](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/CLIENT_SETUP.md)
+  - [Client Configuration](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/CLIENT_SETUP.md#client-configuration)
+  - [Confirm Operation](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/CLIENT_SETUP.md#confirm-operation)
