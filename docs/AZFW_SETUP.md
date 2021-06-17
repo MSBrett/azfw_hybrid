@@ -68,7 +68,7 @@ Navigate to the 'Rules (Classic)' blade on the Azure Firewall and create two new
 
 ### Domain Controllers
 
-**Create a new network rule collection with these properties:**
+**Properties:**
 
 Property        | Value              |
 ----------------|--------------------|
@@ -76,7 +76,7 @@ Collection Name | Domain_Controllers |
 Priority        | 400                |
 Action          | Allow              |
 
-**Add these rules to the Domain Controllers network rule collection:**
+**IP Addresses:**
 
 | Name       | Protocol | Source Type | Source                       | Destination Type | Destination Address | Destination Ports                               |
 |------------|----------|-------------|------------------------------|------------------|---------------------|-------------------------------------------------|
@@ -88,7 +88,7 @@ Action          | Allow              |
 
 ### Azure Virtual Desktop
 
-**Create a new network rule collection with these properties:**
+**Properties:**
 
 Property        | Value                 |
 ----------------|-----------------------|
@@ -96,16 +96,32 @@ Collection Name | Azure_Virtual_Desktop |
 Priority        | 500                   |
 Action          | Allow                 |
 
-**Add these rules to the Azure Virtual Desktop network rule collection:**
+**IP Addresses:**
 
 | Name        | Protocol | Source Type | Source         | Destination Type | Destination Address | Destination Ports  |
 |-------------|----------|-------------|----------------|------------------|---------------------|--------------------|
 | AVD_TCP_IN  | TCP      | IP Address  |  10.131.0.0/16 | IP Address       | 10.130.0.0/16       | 3389               |
 | AVD_UDP_IN  | UDP      | IP Address  |  10.131.0.0/16 | IP Address       | 10.130.0.0/16       | 3389               |
 | AVD_ICMP_IN | ICMP     | IP Address  |  10.131.0.0/16 | IP Address       | 10.130.0.0/16       | *                  |
-| RDG_TCP_IN  | TCP      | IP Address  |  10.129.0.0/16 | IP Address       | 10.131.0.0/16       | 443                  |
+| RDG_TCP_IN  | TCP      | IP Address  |  10.129.0.0/16 | IP Address       | 10.131.0.0/16       | 443                |
 
 ![Azure Virtual Desktop Network Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/AVD_Network_Rules.png)
+
+### General Connectivity
+
+Property        | Value                 |
+----------------|-----------------------|
+Collection Name | General_Connectivity |
+Priority        | 600                   |
+Action          | Allow                 |
+**FQDNs:**
+
+| Name                 | Protocol | Source Type | Source         | Destination FQDNs | Destination Ports  |
+|----------------------|----------|-------------|----------------|-------------------|--------------------|
+| time.windows.com     | UDP      | IP Address  |  10.128.0.0/14 | time.windows.com  | 123                |
+| kms.core.windows.net | TCP      | IP Address  |  10.128.0.0/14 | time.windows.com  | 1688               |
+
+![Azure Virtual Desktop Network Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/General_Network_Rule.png)
 
 ## Add Application Rules (Layer 7) to the environment
 
@@ -119,13 +135,13 @@ Collection Name | Azure_Virtual_Desktop |
 Priority        | 500                   |
 Action          | Allow                 |
 
-**WindowsVirtualDesktop FQDN Tag:**
+**FQDN Tags:**
 
 | Name                  | Source Type | Source         | FQDN Tag              |
 |-----------------------|-------------|----------------|-----------------------|
 | WindowsVirtualDesktop | IP Address  |  10.130.0.0/16 | WindowsVirtualDesktop |
 
-**Additional Target FQDN Tags:**
+**Target FQDNs:**
 
 | Name                      | Source Type | Source         | Target Tag                 |
 |---------------------------|-------------|----------------|----------------------------|
