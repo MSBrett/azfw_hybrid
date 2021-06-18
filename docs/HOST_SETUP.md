@@ -16,11 +16,9 @@ Registering the virtual machines to a Azure Virtual Desktop host pool is as simp
 To register the Azure Virtual Desktop agents, do the following on the session host VM:
 
 - Connect to the virtual machine with the credentials you provided when creating the virtual machine.
-- Download and install the Azure Virtual Desktop Agent.
 - Download the [Azure Virtual Desktop Agent](https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrmXv)
 - Run the installer.
   - When the installer asks you for the registration token, enter the value you got from the Azure Portal.
-- Download and install the Azure Virtual Desktop Agent Bootloader.
 - Download the [Azure Virtual Desktop Agent Bootloader](https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrxrH).
 - Run the installer.
 
