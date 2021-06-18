@@ -1,9 +1,14 @@
+# Lab Deployment Guide
+
 ## Prerequisites
 
 - Windows users should use the Windows Subsystem for Linux to execute the script.  Mac and Linux users may use their terminal of choice.
 
 - The script requires the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 
+- Visual Studio Code is recommended for running the lab, along with these extensions:
+  - Azure Resource Manager Tools
+  - Remote WSL (for Windows users)
 
 ## Pre-deployment
 
