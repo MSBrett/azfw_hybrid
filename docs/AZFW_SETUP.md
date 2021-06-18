@@ -116,10 +116,10 @@ Priority        | 600                   |
 Action          | Allow                 |
 **FQDNs:**
 
-| Name                 | Protocol | Source Type | Source         | Destination FQDNs | Destination Ports  |
-|----------------------|----------|-------------|----------------|-------------------|--------------------|
-| time.windows.com     | UDP      | IP Address  |  10.128.0.0/14 | time.windows.com  | 123                |
-| kms.core.windows.net | TCP      | IP Address  |  10.128.0.0/14 | time.windows.com  | 1688               |
+| Name                 | Protocol | Source Type | Source         | Destination FQDNs    | Destination Ports  |
+|----------------------|----------|-------------|----------------|----------------------|--------------------|
+| time.windows.com     | UDP      | IP Address  |  10.128.0.0/14 | time.windows.com     | 123                |
+| kms.core.windows.net | TCP      | IP Address  |  10.128.0.0/14 | kms.core.windows.net | 1688               |
 
 ![Azure Virtual Desktop Network Rules](https://github.com/MSBrett/azfw_hybrid/raw/master/resources/General_Network_Rule.png)
 
