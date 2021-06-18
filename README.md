@@ -44,7 +44,7 @@ The lab script will deploy 4 virtual networks in a hub-spoke topology.
     - [Allowed Websites Application Rule](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AZFW_SETUP.md#allowed-websites-application-rule)
 - [Configure Azure Virtual Desktop](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AVD_SETUP.md)
 - [Add Session Hosts to Azure Virtual Desktop](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/HOST_SETUP.md)
-  - [Obtain the registration key from the Azure Portalp](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/HOST_SETUP.md#obtain-the-registration-key-from-the-azure-portal)
+  - [Obtain the registration key from the Azure Portal](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/HOST_SETUP.md#obtain-the-registration-key-from-the-azure-portal)
   - [Register the session host VM to the Azure Virtual Desktop host pool](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/HOST_SETUP.md#register-the-session-host-vm-to-the-azure-virtual-desktop-host-pool)
   - [Confirm the VM is registered with Azure Virtual Desktop](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/HOST_SETUP.md#confirm-the-vm-is-registered-with-azure-virtual-desktop)
 - [Configure Authentication](https://github.com/MSBrett/azfw_hybrid/blob/master/docs/AUTH_SETUP.md)
